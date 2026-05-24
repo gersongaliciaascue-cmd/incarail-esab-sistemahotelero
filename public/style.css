@@ -1,0 +1,37 @@
+body { 
+  margin:0; font-family: Arial, sans-serif; 
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1526772662000-3f88f10405ff') center/cover fixed;
+  color:#fff; text-align:center; min-height:100vh;
+}
+h1 { font-family: 'Libre Baskerville', serif; font-size: 2.5em; margin-top: 10vh; text-shadow: 2px 2px 4px #000; }
+.contenedor { display:flex; justify-content:center; gap:40px; margin-top:50px; flex-wrap:wrap; padding:0 20px; }
+.cuadro,.cuadro-reporte { 
+  background: rgba(0,0,0,0.7); border: 2px solid #fff; 
+  padding: 60px 40px; border-radius: 15px; cursor:pointer; 
+  font-size:1.3em; font-weight:bold; transition: 0.3s; min-width: 250px;
+}
+.cuadro:hover,.cuadro-reporte:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+.cuadro-reporte { padding: 20px 40px; margin: 40px auto; width: fit-content; }
+
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; }
+.modal-contenido { background:#1a1a1a; margin:5% auto; padding:20px; width:90%; max-width:600px; border-radius:10px; border:2px solid #fff; }
+.modal-contenido h2,.modal-contenido h3 { font-family: 'Libre Baskerville', serif; }
+.modal-contenido input { width:90%; padding:10px; margin:8px 0; border-radius:5px; border:none; }
+.modal-contenido button { padding:10px 20px; margin:10px; background:#0a5c36; color:#fff; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
+.modal-contenido button:hover { background:#0d7a48; }
+
+.cuartos-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; }
+.btn-hab { padding:15px; border:none; border-radius:8px; color:#fff; font-weight:bold; cursor:pointer; }
+.btn-hab.disponible { background:#0a5c36; }
+.btn-hab.lleno { background:#8b0000; cursor:not-allowed; }
+
+.camas-grid { display:flex; justify-content:space-around; flex-wrap:wrap; margin:20px 0; }
+.cama { width: 100px; height: 100px; border:3px solid #0a5c36; display:flex; align-items:center; justify-content:center; flex-direction:column; margin:10px; position:relative; background:#222; border-radius:10px; }
+.cama.ocupada { border-color:#8b0000; background:#400; }
+.cama input { position:absolute; top:5px; left:5px; }
+
+#loader { position:fixed; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:9999; }
+#llama-corriendo { width:150px; animation: correr 2s linear forwards; }
+@keyframes correr { 0%{transform:translateX(-100vw)} 100%{transform:translateX(100vw)} }
+
+@media(max-width:600px){ h1{font-size:1.8em}.cuadro{padding:40px 20px; min-width:200px} }

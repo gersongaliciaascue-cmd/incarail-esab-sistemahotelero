@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INCA RAIL ESAB</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="loader"><img src="assets/llama.png" id="llama-corriendo" alt="Llama INCARAIL"></div>
+
+  <main id="app" style="display:none;">
+    <h1>INCA RAIL ESAB</h1>
+    <div class="contenedor">
+      <div class="cuadro" onclick="abrirModal('CALICANTO')">
+        <span>VIVIENDA CALICANTO</span>
+      </div>
+      <div class="cuadro" onclick="abrirModal('ANDENES')">
+        <span>VIVIENDA ANDENES</span>
+      </div>
+    </div>
+    <div class="cuadro-reporte" onclick="alert('Módulo Reportes próximamente')">REPORTES</div>
+  </main>
+
+  <div id="modal" class="modal" onclick="cerrarModal(event)">
+    <div class="modal-contenido" id="modal-contenido" onclick="event.stopPropagation()"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
