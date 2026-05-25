@@ -22,32 +22,24 @@
     </div>
     <div id="btnReportes" class="cuadro-reporte">REPORTES</div>
   </main>
-<div id="modalClave" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-  <div style="background:white; margin:15% auto; padding:20px; width:300px; border-radius:10px;">
-    <h3>Acceso a Reportes</h3>
-    <input type="password" id="inputClave" placeholder="Ingrese clave" style="width:100%; padding:8px; margin:10px 0;">
-    <div style="text-align:right;">
-      <button id="btnCancelarClave">Cancelar</button>
-      <button id="btnEntrarReportes">Entrar</button>
-    </div>
-    <p id="errorClave" style="color:red; display:none;">Clave incorrecta</p>
-  </div>
-</div>
-
 <div id="modalReportes" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-  <div style="background:white; margin:5% auto; padding:20px; width:90%; max-width:900px; border-radius:10px; max-height:80vh; overflow:auto;">
+  <div style="background:white; margin:5% auto; padding:20px; width:90%; max-width:900px; border-radius:10px; max-height:80vh; overflow:auto; color:#000;">
     <div style="display:flex; justify-content:space-between;">
       <h3>Panel de Reportes</h3>
       <button id="btnCerrarReportes">X</button>
     </div>
+    
     <div style="display:flex; gap:20px;">
+      
       <div style="flex:1; border:1px solid #ccc; padding:10px; max-height:60vh; overflow:auto;">
-        <h4>Todas las asignaciones</h4>
-        <div id="listaAsignaciones">Cargando...</div>
+        <h4>Total ocupadas: <span id="totalOcupadas">0</span></h4>
+        <p>Aquí tienes el resumen. Usa la lista de la derecha para liberar.</p>
       </div>
+      
+      
       <div style="flex:1; border:1px solid #ccc; padding:10px; max-height:60vh; overflow:auto;">
         <h4>Liberar camas</h4>
-        <div id="listaParaLiberar">Seleccione una cama de la izquierda</div>
+        <div id="listaParaLiberar">Cargando...</div>
       </div>
     </div>
   </div>
