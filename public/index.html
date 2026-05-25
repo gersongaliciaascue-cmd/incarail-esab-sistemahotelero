@@ -20,14 +20,140 @@
         <span>VIVIENDA ANDENES</span>
       </div>
     </div>
-    <div class="cuadro-reporte" onclick="alert('Módulo Reportes próximamente')">REPORTES</div>
+    <div id="btnReportes" class="cuadro-reporte">REPORTES</div>
   </main>
+<div id="modalClave" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+  <div style="background:white; margin:15% auto; padding:20px; width:300px; border-radius:10px;">
+    <h3>Acceso a Reportes</h3>
+    <input type="password" id="inputClave" placeholder="Ingrese clave" style="width:100%; padding:8px; margin:10px 0;">
+    <div style="text-align:right;">
+      <button id="btnCancelarClave">Cancelar</button>
+      <button id="btnEntrarReportes">Entrar</button>
+    </div>
+    <p id="errorClave" style="color:red; display:none;">Clave incorrecta</p>
+  </div>
+</div>
 
+<div id="modalReportes" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+  <div style="background:white; margin:5% auto; padding:20px; width:90%; max-width:900px; border-radius:10px; max-height:80vh; overflow:auto;">
+    <div style="display:flex; justify-content:space-between;">
+      <h3>Panel de Reportes</h3>
+      <button id="btnCerrarReportes">X</button>
+    </div>
+    <div style="display:flex; gap:20px;">
+      <div style="flex:1; border:1px solid #ccc; padding:10px; max-height:60vh; overflow:auto;">
+        <h4>Todas las asignaciones</h4>
+        <div id="listaAsignaciones">Cargando...</div>
+      </div>
+      <div style="flex:1; border:1px solid #ccc; padding:10px; max-height:60vh; overflow:auto;">
+        <h4>Liberar camas</h4>
+        <div id="listaParaLiberar">Seleccione una cama de la izquierda</div>
+      </div>
+    </div>
+  </div>
+</div>
   <div id="modal" class="modal" onclick="cerrarModal(event)">
     <div class="modal-contenido" id="modal-contenido" onclick="event.stopPropagation()"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
+<script>
+let reportesToken = null;
+document.getElementById('btnReportes').addEventListener('click', () => {
+  document.getElementById('modalClave').style.display = 'block';
+  document.getElementById('errorClave').style.display = 'none';
+  document.getElementById('inputClave').value = '';
+});
+document.getElementById('btnCancelarClave').addEventListener('click', () => {
+  document.getElementById('modalClave').style.display = 'none';
+});
+document.getElementById('btnCerrarReportes').addEventListener('click', () => {
+  document.getElementById('modalReportes').style.display = 'none';
+  reportesToken = null;
+});
+document.getElementById('btnEntrarReportes').addEventListener('click', async () => {
+  const password = document.getElementById('inputClave').value;
+  try {
+    const res = await fetch('/api/reportes/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      reportesToken = data.token;
+      document.getElementById('modalClave').style.display = 'none';
+      document.getElementById('modalReportes').style.display = 'block';
+      cargarAsignaciones();
+    } else {
+      document.getElementById('errorClave').style.display = 'block';
+    }
+  } catch (err) {
+    alert('Error de conexión: ' + err);
+  }
+});
+async function cargarAsignaciones() {
+  const lista = document.getElementById('listaAsignaciones');
+  lista.innerHTML = 'Cargando...';
+  try {
+    const res = await fetch('/api/reportes/asignaciones', {
+      headers: { 'x-token': reportesToken }
+    });
+    const data = await res.json();
+    if (data.length === 0) {
+      lista.innerHTML = '<p>No hay camas ocupadas.</p>';
+      return;
+    }
+    let html = '';
+    data.forEach(cama => {
+      html += `<div style="border:1px solid #ddd; padding:8px; margin:5px 0; cursor:pointer;" 
+             onclick="seleccionarCama('${cama.vivienda}', ${cama.habitacion}, ${cama.cama_num}, '${cama.nombre}')">
+          <b>V${cama.vivienda} Hab ${cama.habitacion} Cama ${cama.cama_num}</b><br>
+          ${cama.nombre}
+        </div>`;
+    });
+    lista.innerHTML = html;
+  } catch (err) {
+    lista.innerHTML = 'Error al cargar: ' + err;
+  }
+}
+function seleccionarCama(vivienda, habitacion, cama_num, nombre) {
+  const div = document.getElementById('listaParaLiberar');
+  div.innerHTML = `
+    <p><b>¿Liberar esta cama?</b></p>
+    <p>Vivienda: ${vivienda}</p>
+    <p>Habitación: ${habitacion}</p>
+    <p>Cama: ${cama_num}</p>
+    <p>Huésped: ${nombre}</p>
+    <button onclick="liberarCama(${vivienda}, ${habitacion}, ${cama_num})" 
+            style="background:red; color:white; padding:10px; border:none;">
+      CONFIRMAR LIBERAR
+    </button>`;
+}
+async function liberarCama(vivienda, habitacion, cama_num) {
+  if (!confirm('¿Seguro que quieres liberar esta cama?')) return;
+  try {
+    const res = await fetch('/api/liberar-cama', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-token': reportesToken 
+      },
+      body: JSON.stringify({ vivienda, habitacion, cama_num })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert('Cama liberada correctamente');
+      cargarAsignaciones();
+      document.getElementById('listaParaLiberar').innerHTML = 'Seleccione otra cama de la izquierda';
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (err) {
+    alert('Error de conexión: ' + err);
+  }
+}
+</script>
 </body>
 </html>
