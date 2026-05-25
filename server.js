@@ -11,7 +11,11 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;  
   
 app.use(express.json());  
-app.use(express.static('public'));  
+app.use(express.static('public')); 
+
+app.get('/', (req, res) =>{
+  res.sendFile(__dirname + '/public/index.html');
+});
   
 const db = new sqlite3.Database('./hotel.db');  
   
