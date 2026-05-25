@@ -12,7 +12,66 @@ const PORT = process.env.PORT || 3000;
   
 app.use(express.json());  
 app.use(express.static('public')); 
+app.post('/api/reportes/login', (req, res) => {
+  const { password } = req.body;
+  const claveReal = process.env.REPORTES_PASS; 
 
+  if (!claveReal) {
+    return res.status(500).json({ ok: false, error: "Falta configurar REPORTES_PASS en Render" });
+  }
+
+  if (password === claveReal) {
+    res.json({ ok: true, token: "ok_reportes" }); 
+  } else {
+    res.status(401).json({ ok: false, error: "Contraseña incorrecta" });
+  }
+});
+
+app.get('/api/reportes/asignaciones', async (req, res) => {
+  const token = req.headers['x-token'];
+  if (token !== "ok_reportes") return res.status(403).json({ error: 'No autorizado' });
+
+  const sql = `
+    SELECT 
+      vivienda, 
+      habitacion, 
+      cama_num, 
+      nombre 
+    FROM camas 
+    WHERE ocupado = 1 AND nombre IS NOT NULL AND nombre != ''
+    ORDER BY vivienda, habitacion, cama_num
+  `;
+  
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error("Error en /asignaciones:", err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
+
+app.post('/api/liberar-cama', (req, res) => {
+  const token = req.headers['x-token'];
+  if (token !== "ok_reportes") return res.status(403).json({ error: 'No autorizado' });
+
+  const { vivienda, habitacion, cama_num } = req.body;
+  
+  const sql = `
+    UPDATE camas 
+    SET ocupado = 0, nombre = NULL, dni = NULL, dias = NULL 
+    WHERE vivienda = ? AND habitacion = ? AND cama_num = ?
+  `;
+  
+  db.run(sql, [vivienda, habitacion, cama_num], function(err) {
+    if (err) {
+      console.error("Error en /liberar-cama:", err);
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+    res.json({ ok: true });
+  });
+});
 app.get('/', (req, res) =>{
   res.sendFile(__dirname + '/public/index.html');
 });
