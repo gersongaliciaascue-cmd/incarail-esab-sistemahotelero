@@ -1,177 +1,99 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INCA RAIL ESAB</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div id="loader"><img src="assets/llama.png" id="llama-corriendo" alt="Llama INCARAIL"></div>
-
-  <main id="app" style="display:none;">
-    <h1>INCA RAIL ESAB</h1>
-    <div class="contenedor">
-      <div class="cuadro" onclick="abrirModal('CALICANTO')">
-        <span>VIVIENDA CALICANTO</span>
-      </div>
-      <div class="cuadro" onclick="abrirModal('ANDENES')">
-        <span>VIVIENDA ANDENES</span>
-      </div>
-    </div>
-    <div id="btnReportes" class="cuadro-reporte">REPORTES</div>
-  </main>
-<div id="modalClave" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-  <div style="background:white; margin:15% auto; padding:20px; width:300px; border-radius:10px; color:#000;">
-    <h3>Acceso a Reportes</h3>
-    <input type="password" id="inputClave" placeholder="Ingrese clave" style="width:100%; padding:8px; margin:10px 0;">
-    <div style="text-align:right;">
-      <button id="btnCancelarClave">Cancelar</button>
-      <button id="btnEntrarReportes">Entrar</button>
-    </div>
-    <p id="errorClave" style="color:red; display:none;">Clave incorrecta</p>
-  </div>
-</div>
-<div id="modalReportes" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-  <div style="background:white; margin:5% auto; padding:20px; width:90%; max-width:900px; border-radius:10px; max-height:80vh; overflow:auto; color:#000;">
-    <div style="display:flex; justify-content:space-between;">
-      <h3>Panel de Reportes</h3>
-      <button id="btnCerrarReportes">X</button>
-    </div>
-    
-    <div style="display:flex; gap:20px;">
+<!DOCTYPE html>  
+<html lang="es">  
+<head>  
+  <meta charset="UTF-8">  
+  <title>INCA RAIL ESAB</title>  
+  <style>  
+    body {   
+      margin: 0; padding-top: 50px;  
+      font-family: Arial, sans-serif; color: #fff; text-align: center;  
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),   
+                  url(https://images.unsplash.com/photo-1526772662000-3f88f10405%20-) center/cover fixed;  
+      min-height: 100vh;  
+    }  
+    h1 { font-size: 48px; margin-bottom: 40px; }  
+    button {  
+      background: #000; color: #fff; border: 2px solid #fff; border-radius: 10px;  
+      padding: 20px 40px; margin: 10px; font-size: 18px; font-weight: bold;  
+      cursor: pointer; width: 300px;  
+    }  
+    #modalReportes {   
+      display: none; position: fixed; top: 50px; left: 50%;  
+      transform: translateX(-50%); width: 80%; max-width: 900px;  
+      background: #222; padding: 20px; border-radius: 8px; border: 1px solid #fff;  
+      text-align: left; z-index: 1000;  
+    }  
+  </style>  
+</head>  
+<body>  
+  
+  <h1>INCA RAIL ESAB</h1>  
+  <button>VIVIENDA CALICANTO</button>  
+  <button>VIVIENDA ANDENES</button>  
+  <br>  
+  <button onclick="abrirReportes()">REPORTES</button>  
+  
+  <div id="modalReportes">  
+    <button onclick="cerrarReportes()" style="float:right; width:auto; padding:5px 10px;">X</button>  
+    <div id="resumenCol"></div>  
+    <div id="listaCamas"></div>  
+  </div>  
+  
+<script>  
+const CLAVE_REPORTES = 'incarail789'; // Tu clave  
+  
+function abrirReportes() {  
+  const clave = prompt('Ingrese contraseña para ver Reportes:');  
+  if (clave === CLAVE_REPORTES) {  
+    document.getElementById('modalReportes').style.display = 'block';  
+    mostrarReportes();  
+  } else if (clave !== null) {   
+    alert('Contraseña incorrecta');  
+  }  
+}  
+  
+function cerrarReportes() {  
+  document.getElementById('modalReportes').style.display = 'none';  
+}  
+  
+async function mostrarReportes() {  
+  document.getElementById('listaCamas').innerHTML = '<p>Cargando...</p>';  
+  try {  
+    const res = await fetch('/api/camas-ocupadas');   
+    if(!res.ok) throw new Error('Error ' + res.status);  
+    const camas = await res.json();  
       
-      <div style="flex:1; border:1px solid #ccc; padding:10px; max-height:60vh; overflow:auto;">
-        <h4>Total ocupadas: <span id="totalOcupadas">0</span></h4>
-        <p>Aquí tienes el resumen. Usa la lista de la derecha para liberar.</p>
-      </div>
-      
-      
-      <div style="flex:1; border:1px solid #ccc; padding:10px; max-height:60vh; overflow:auto;">
-        <h4>Liberar camas</h4>
-        <div id="listaOcupadas">Cargando...</div>
-      </div>
-    </div>
-  </div>
-</div>
-  <div id="modal" class="modal" onclick="cerrarModal(event)">
-    <div class="modal-contenido" id="modal-contenido" onclick="event.stopPropagation()"></div>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
-<script>
-const CLAVE_REPORTES = 'incarail1789';
-
-// Abrir modal clave
-
-function abrirModalClave() {
-
-  document.getElementById('modalClave').style.display = 'flex';
-  document.getElementById('inputClave').value = '';
-  document.getElementById('errorClave').style.display = 'none';
-}
-function cerrarModalClave() {
-
-  document.getElementById('modalClave').style.display = 'none';
-}
-
-document.getElementById('btnEntrarReportes').onclick = () => {
-  const clave = document.getElementById('inputClave').value;
-  if(clave === CLAVE_REPORTES){
-    document.getElementById('modalClave').style.display = 'none';
-    mostrarReportes();
-  } else {
-    document.getElementById('errorClave').style.display = 'block';
-  }
-}
-
-document.getElementById('btnCerrarReportes').onclick = () => {
-  document.getElementById('modalReportes').style.display = 'none';
-}
-
-// Función principal: Carga y muestra todo
-async function mostrarReportes() {
-  document.getElementById('modalReportes').style.display = 'block';
-  const listaDiv = document.getElementById('listaOcupadas');
-
-  listaDiv.innerHTML = 'Cargando...';
-
-  try {
-    const res = await fetch('/api/camas-ocupadas');
-    if(!res.ok) throw new Error('Error servidor');
-    const camas = await res.json();
-
-    document.getElementById('totalOcupadas').textContent = camas.length;
-
-    if(camas.length === 0){
-      listaDiv.innerHTML = '<p>No hay camas ocupadas</p>';
-      // También limpia la izquierda
-      document.querySelector('#modalReportes > div > div > div:first-child').innerHTML = '<h4>Total ocupadas: 0</h4>';
-      return;
-    }
-
-    // Llenar columna izquierda: Resumen
-    let resumen = {};
-    camas.forEach(c => {
-      resumen[c.vivienda] = (resumen[c.vivienda] || 0) + 1;
-    });
-    let htmlIzq = `<h4>Total ocupadas: ${camas.length}</h4>`;
-    for(let v in resumen){
-      htmlIzq += `<p>${v}: ${resumen[v]} camas</p>`;
-    }
-    document.querySelector('#modalReportes > div > div > div:first-child').innerHTML = htmlIzq;
-
-    // Llenar columna derecha: Lista con botón Liberar
-    let htmlIDer = `<h4>Liberar camas</h4>`;
-    camas.forEach(c => {
-      htmlDer += `
-        <div style="border:1px solid #ddd; padding:8px; margin:5px 0; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <b>${c.vivienda} Hab ${c.habitacion} Cama ${c.cama_num}</b><br>
-            <small>${c.huesped}</small>
-          </div>
-          <button style="background:red; color:white; border:none; padding:5px 10px;"
-            onclick="liberarCama('${c.vivienda}', ${c.habitacion}, ${c.cama_num})">
-            Liberar
-          </button>
-        </div>
-      `;
-    });
-    listaDiv.innerHTML = htmlDer;
-
-  } catch(e) {
-    listaDiv.innerHTML = '<p style="color:red;">Error al cargar datos. Reintenta.</p>';
-    console.error(e);
-  }
-}
-
-// Función Liberar: Llama al backend y refresca
-async function liberarCama(vivienda, habitacion, cama_num) {
-  if (!confirm(`¿Seguro que quieres liberar ${vivienda} Hab ${habitacion} Cama ${cama_num}?`)) {
-    return;
-}
-  try {
-    const res = await fetch('/api/liberar-cama', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({vivienda, habitacion, cama_num})
-    });
-
-    const data = await res.json();
-
-    if(res.ok){
-      alert('Cama liberada correctamente');
-      mostrarReportes(); // Refresca la lista y el total de la izquierda
-    } else {
-      alert('Error: ' + data.error);
-    }
-  } catch(e) {
-    alert('Error de conexión');
-    console.error(e);
-  }
-}
-</script>
-</body>
-</html>
+    if(camas.length === 0) {  
+      document.getElementById('listaCamas').innerHTML = '<p>No hay camas ocupadas</p>';  
+      return;  
+    }  
+  
+    let html = `<p>Total: ${camas.length} camas ocupadas</p>`;  
+    camas.forEach(c => {  
+      html += `<div style="border-bottom:1px solid #444; padding:8px 0;">  
+        <b>${c.vivienda}</b> - Hab ${c.habitacion} Cama ${c.cama_num}   
+        - ${c.nombre || 'Sin nombre'} DNI: ${c.dni || '-'}  
+        <button onclick="liberarCama('${c.vivienda}', '${c.habitacion}', '${c.cama_num}')" style="margin-left:10px;">Liberar</button>  
+      </div>`;  
+    });  
+    document.getElementById('listaCamas').innerHTML = html;  
+  
+  } catch(e) {  
+    document.getElementById('listaCamas').innerHTML = '<p style="color:red;">Error: ' + e.message + '</p>';  
+  }  
+}  
+  
+async function liberarCama(vivienda, habitacion, cama_num) {  
+  if(!confirm('¿Liberar esta cama?')) return;  
+  const res = await fetch('/api/liberar-cama', {   
+    method: 'POST',  
+    headers: {'Content-Type': 'application/json'},  
+    body: JSON.stringify({vivienda, habitacion, cama_num})  
+  });  
+  const data = await res.json();  
+  alert(data.mensaje || data.error);  
+  if(res.ok) mostrarReportes(); // Recarga  
+}  
+</script>  
+</body>  
+</html>  
