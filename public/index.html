@@ -65,13 +65,15 @@
 const CLAVE_REPORTES = 'incarail1789';
 
 // Abrir modal clave
-document.getElementById('btnReportes').onclick = () => {
-  document.getElementById('modalClave').style.display = 'block';
+
+function abrirModalClave() {
+
+  document.getElementById('modalClave').style.display = 'flex';
   document.getElementById('inputClave').value = '';
   document.getElementById('errorClave').style.display = 'none';
 }
+function cerrarModalClave() {
 
-document.getElementById('btnCancelarClave').onclick = () => {
   document.getElementById('modalClave').style.display = 'none';
 }
 
@@ -147,8 +149,9 @@ async function mostrarReportes() {
 
 // Función Liberar: Llama al backend y refresca
 async function liberarCama(vivienda, habitacion, cama_num) {
-  if (!confirm(¿Seguro que quieres liberar ${vivienda} Hab ${habitacion} Cama ${cama_num}?)) return;
-
+  if (!confirm(`¿Seguro que quieres liberar ${vivienda} Hab ${habitacion} Cama ${cama_num}?`)) {
+    return;
+}
   try {
     const res = await fetch('/api/liberar-cama', {
       method: 'POST',
@@ -165,7 +168,7 @@ async function liberarCama(vivienda, habitacion, cama_num) {
       alert('Error: ' + data.error);
     }
   } catch(e) {
-    alert('No se pudo conectar con el servidor');
+    alert('Error de conexión');
     console.error(e);
   }
 }
