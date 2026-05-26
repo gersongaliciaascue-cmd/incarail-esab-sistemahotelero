@@ -136,5 +136,37 @@ function enviarCorreo(nombre, area, dni, dias, camaId){
   });  
 }  
   
-io.on('connection', (socket) => console.log('Usuario conectado'));  
-server.listen(PORT, '0.0.0.0', () => console.log(`Servidor en http://localhost:${PORT}`));  
+io.on('connection', (socket) => console.log('Usuario conectado')); 
+// Reportes: Listar todas las camas ocupadas
+app.get('/api/camas-ocupadas', (req, res) => {
+  db.all('SELECT * FROM camas WHERE ocupado = 1 ORDER BY vivienda, habitacion, cama_num', [], (err, rows) => {
+    if(err) {
+      console.error(err);
+      return res.status(500).json({error: 'Error al obtener camas ocupadas'});
+    }
+    res.json(rows);
+  });
+});
+
+// Reportes: Liberar una cama específica
+app.post('/api/liberar-cama', (req, res) => {
+  const {vivienda, habitacion, cama_num} = req.body;
+  db.run(
+    'UPDATE camas SET ocupado = 0, nombre = NULL, dni = NULL, dias = NULL WHERE vivienda =? AND habitacion =? AND cama_num =?',
+    [vivienda, habitacion, cama_num],
+    function(err) {
+      if(err) {
+        console.error(err);
+        return res.status(500).json({error: 'Error al liberar cama'});
+      }
+      if(this.changes === 0) {
+        return res.status(404).json({error: 'Cama no encontrada o ya está libre'});
+      }
+      io.emit('actualizar_camas');
+      res.json({ok: true, mensaje: 'Cama liberada'});
+    }
+  );
+});
+
+server.listen(PORT, '0.0.0.0', () => console.log(`Servidor en http://localhost:${PORT}`)); 
+  
