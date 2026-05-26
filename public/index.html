@@ -115,14 +115,14 @@ async function mostrarReportes() {
     camas.forEach(c => {
       resumen[c.vivienda] = (resumen[c.vivienda] || 0) + 1;
     });
-    let htmlIzq = <h4>Total ocupadas: ${camas.length}</h4>;
+    let htmlIzq = `<h4>Total ocupadas: ${camas.length}</h4>`;
     for(let v in resumen){
-      htmlIzq += <p>${v}: ${resumen[v]} camas</p>;
+      htmlIzq += `<p>${v}: ${resumen[v]} camas</p>`;
     }
     document.querySelector('#modalReportes > div > div > div:first-child').innerHTML = htmlIzq;
 
     // Llenar columna derecha: Lista con botón Liberar
-    let htmlDer = '<h4>Liberar camas</h4>';
+    let htmlIDer = `<h4>Liberar camas</h4>`;
     camas.forEach(c => {
       htmlDer += `
         <div style="border:1px solid #ddd; padding:8px; margin:5px 0; display:flex; justify-content:space-between; align-items:center;">
