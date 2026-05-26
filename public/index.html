@@ -62,106 +62,111 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 <script>
-let reportesToken = null;
+const CLAVE_REPORTES = 'incarail1789';
 
-document.getElementById('btnReportes').addEventListener('click', () => {
+// Abrir modal clave
+document.getElementById('btnReportes').onclick = () => {
   document.getElementById('modalClave').style.display = 'block';
-  document.getElementById('errorClave').style.display = 'none';
   document.getElementById('inputClave').value = '';
-});
+  document.getElementById('errorClave').style.display = 'none';
+}
 
-document.getElementById('btnCancelarClave').addEventListener('click', () => {
+document.getElementById('btnCancelarClave').onclick = () => {
   document.getElementById('modalClave').style.display = 'none';
-});
-document.getElementById('btnCerrarReportes').addEventListener('click', () => {
-  document.getElementById('modalReportes').style.display = 'none';
-  reportesToken = null;
-});
+}
 
-document.getElementById('btnEntrarReportes').addEventListener('click', async () => {
-  const password = document.getElementById('inputClave').value;
-  try {
-    const res = await fetch('/api/reportes/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      reportesToken = data.token;
-      document.getElementById('modalClave').style.display = 'none';
-      document.getElementById('modalReportes').style.display = 'block';
-      cargarAsignaciones();
-    } else {
-      document.getElementById('errorClave').style.display = 'block';
-    }
-  } catch (err) {
-    alert('Error de conexión: ' + err);
+document.getElementById('btnEntrarReportes').onclick = () => {
+  const clave = document.getElementById('inputClave').value;
+  if(clave === CLAVE_REPORTES){
+    document.getElementById('modalClave').style.display = 'none';
+    mostrarReportes();
+  } else {
+    document.getElementById('errorClave').style.display = 'block';
   }
-});
+}
 
-async function cargarAsignaciones() {
-  const lista = document.getElementById('listaParaLiberar');
-  const total = document.getElementById('totalOcupadas');
-  lista.innerHTML = 'Cargando...';
+document.getElementById('btnCerrarReportes').onclick = () => {
+  document.getElementById('modalReportes').style.display = 'none';
+}
+
+// Función principal: Carga y muestra todo
+async function mostrarReportes() {
+  document.getElementById('modalReportes').style.display = 'block';
+  const listaDiv = document.getElementById('listaOcupadas');
+
+  listaDiv.innerHTML = 'Cargando...';
+
   try {
-    const res = await fetch('/api/reportes/asignaciones', {
-      headers: { 'x-token': reportesToken }
-    });
-    const data = await res.json();
-    
-    total.innerText = data.length;
-    
-    if (data.length === 0) {
-      lista.innerHTML = '<p>No hay camas ocupadas.</p>';
+    const res = await fetch('/api/camas-ocupadas');
+    if(!res.ok) throw new Error('Error servidor');
+    const camas = await res.json();
+
+    document.getElementById('totalOcupadas').textContent = camas.length;
+
+    if(camas.length === 0){
+      listaDiv.innerHTML = '<p>No hay camas ocupadas</p>';
+      // También limpia la izquierda
+      document.querySelector('#modalReportes > div > div > div:first-child').innerHTML = '<h4>Total ocupadas: 0</h4>';
       return;
     }
-    
-    let html = '';
-    data.forEach(cama => {
-      const vivienda_num = cama.vivienda === 'CALICANTO' ? 1 : 2;
-      
-      html += `
+
+    // Llenar columna izquierda: Resumen
+    let resumen = {};
+    camas.forEach(c => {
+      resumen[c.vivienda] = (resumen[c.vivienda] || 0) + 1;
+    });
+    let htmlIzq = <h4>Total ocupadas: ${camas.length}</h4>;
+    for(let v in resumen){
+      htmlIzq += <p>${v}: ${resumen[v]} camas</p>;
+    }
+    document.querySelector('#modalReportes > div > div > div:first-child').innerHTML = htmlIzq;
+
+    // Llenar columna derecha: Lista con botón Liberar
+    let htmlDer = '<h4>Liberar camas</h4>';
+    camas.forEach(c => {
+      htmlDer += `
         <div style="border:1px solid #ddd; padding:8px; margin:5px 0; display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <b>V${cama.vivienda} Hab ${cama.habitacion} Cama ${cama.cama_num}</b><br>
-            ${cama.nombre}
+            <b>${c.vivienda} Hab ${c.habitacion} Cama ${c.cama_num}</b><br>
+            <small>${c.huesped}</small>
           </div>
-          <button onclick="liberarCama(${vivienda_num}, ${cama.habitacion}, ${cama.cama_num})" 
-                  style="background:red; color:white; padding:5px 10px; border:none; cursor:pointer;">
+          <button style="background:red; color:white; border:none; padding:5px 10px;"
+            onclick="liberarCama('${c.vivienda}', ${c.habitacion}, ${c.cama_num})">
             Liberar
           </button>
         </div>
       `;
     });
-    lista.innerHTML = html;
-  } catch (err) {
-    lista.innerHTML = 'Error al cargar: ' + err;
+    listaDiv.innerHTML = htmlDer;
+
+  } catch(e) {
+    listaDiv.innerHTML = '<p style="color:red;">Error al cargar datos. Reintenta.</p>';
+    console.error(e);
   }
 }
 
+// Función Liberar: Llama al backend y refresca
 async function liberarCama(vivienda, habitacion, cama_num) {
-  if (!confirm(`¿Seguro que quieres liberar V${vivienda} Hab ${habitacion} Cama ${cama_num}?`)) return;  
-  
+  if (!confirm(¿Seguro que quieres liberar ${vivienda} Hab ${habitacion} Cama ${cama_num}?)) return;
+
   try {
     const res = await fetch('/api/liberar-cama', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-token': reportesToken 
-      },
-      body: JSON.stringify({ vivienda, habitacion, cama_num })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({vivienda, habitacion, cama_num})
     });
+
     const data = await res.json();
-    
-    if (data.ok) {
+
+    if(res.ok){
       alert('Cama liberada correctamente');
-      cargarAsignaciones();
+      mostrarReportes(); // Refresca la lista y el total de la izquierda
     } else {
-      alert('Error: ' + (data.error || 'No se pudo liberar'));
+      alert('Error: ' + data.error);
     }
-  } catch (err) {
-    alert('Error de conexión: ' + err);
+  } catch(e) {
+    alert('No se pudo conectar con el servidor');
+    console.error(e);
   }
 }
 </script>
